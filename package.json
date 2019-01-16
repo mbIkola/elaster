@@ -1,6 +1,6 @@
 {
   "name": "elaster",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "MongoDB to Elastic Search exporter",
   "main": "source/elaster.js",
   "scripts": {
