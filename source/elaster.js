@@ -1,54 +1,56 @@
-var _ = require('underscore');
-var moment = require('moment');
-var async = require('async');
-var config = require('../config');
+const _ = require('underscore');
+const moment = require('moment');
+const async = require('async');
+const config = require('../config');
 
-var db = require('./db')(config);
-var elastic = require('./elastic')(config);
+const db = require('./db')(config);
+const elastic = require('./elastic')(config);
 
-var through = require('through');
-var single = require('single-line-log');
+const through = require('through');
+const single = require('single-line-log');
+const debug = require('debug')('elaster');
 
 require('colors');
+require('debug').enable('elaster');
 
 function format(duration) {
 	return duration.hours() + ':' + duration.minutes() + ':' + duration.seconds() + ':' + duration.milliseconds();
 }
 
 function exportCollection(desc, callback) {
-	var collection = db[desc.name];
-	var query = desc.query || {};
+	let collection = db[desc.name];
+	let query = desc.query || {};
 
 	if (!collection) {
 		return callback('collection ' + desc.name + ' does not exist.');
 	}
 
-	console.log(('====> exporting collection [' + desc.name + ']').bold.white);
+	debug(('====> exporting collection [' + desc.name + ']').bold.white);
 
-	var started = moment();
+	let started = moment();
 
 	async.waterfall([
 		function (next) {
-			console.log('----> checking connection to elastic');
+			debug('----> checking connection to elastic');
 			elastic.ping({requestTimeout: 1000}, function (err) {
 				next(err);
 			});
 		},
 		function (next) {
-			console.log('----> dropping existing index [' + desc.index + ']');
+			debug('----> dropping existing index [' + desc.index + ']');
 			elastic.indices.delete({index: desc.index}, function (err) {
-				var indexMissing = err && err.message.indexOf('IndexMissingException') === 0;
+				let indexMissing = err && err.message.indexOf('IndexMissingException') === 0;
 				next(indexMissing ? null : err);
 			});
 		},
 		function (next) {
-			console.log('----> creating new index [' + desc.index + ']');
+			debug('----> creating new index [' + desc.index + ']');
 			elastic.indices.create({index: desc.index}, function (err) {
 				next(err);
 			});
 		},
 		function (next) {
-			console.log('----> initialize index mapping');
+			debug('----> initialize index mapping');
 
 			if (!desc.mappings) {
 				return next();
@@ -59,20 +61,20 @@ function exportCollection(desc, callback) {
 			});
 		},
 		function (next) {
-			console.log('----> analizing collection [' + desc.name + ']');
+			debug('----> analizing collection [' + desc.name + ']');
 			collection.count(query, function (err, total) {
 				if (err) {
 					return next(err);
 				}
 
-				console.log('----> find ' + total + ' documentents to export');
+				debug('----> find ' + total + ' documentents to export');
 				next(null, total);
 			});
 		},
 		function (total, next) {
-			console.log('----> streaming collection to elastic');
+			debug('----> streaming collection to elastic');
 
-			var takeFields = through(function (item) {
+			let takeFields = through(function (item) {
 				if (desc.fields) {
 					item = _.pick(item, desc.fields);
 				}
@@ -80,8 +82,8 @@ function exportCollection(desc, callback) {
 				this.queue(item);
 			});
 
-			var postToElastic = through(function (item) {
-				var me = this;
+			let postToElastic = through(function (item) {
+				let me = this;
 
 				me.pause();
 
@@ -92,7 +94,7 @@ function exportCollection(desc, callback) {
 					body: item
 				}, function (err) {
 					if (err) {
-						console.error(('failed to create document in elastic.').bold.red);
+						single(('failed to create document in elastic.').bold.red);
 						return next(err);
 					}
 
@@ -101,15 +103,15 @@ function exportCollection(desc, callback) {
 				});
 			});
 
-			var progress = function () {
-				var count = 0;
+			let progress = function () {
+				let count = 0;
 				return through(function () {
-					var percentage = Math.floor(100 * ++count / total);
+					let percentage = Math.floor(100 * ++count / total);
 					single(('------> processed ' + count + ' documents [' + percentage + '%]').magenta);
 				});
 			};
 
-			var stream = collection
+			let stream = collection
 				.find(query)
 				.sort({_id: 1})
 				.pipe(takeFields)
@@ -122,15 +124,15 @@ function exportCollection(desc, callback) {
 		},
 	], function (err) {
 		if (err) {
-			console.error(('====> collection [' + desc.name + '] - failed to export.\n').bold.red);
-			console.error(err);
+			single(('====> collection [' + desc.name + '] - failed to export.\n').bold.red);
+			debug(err);
 			return callback(err);
 		}
 
-		var duration = moment.duration(moment().diff(started));
+		let duration = moment.duration(moment().diff(started));
 
-		console.log(('====> collection [' + desc.name + '] - exported successfully.').green);
-		console.log(('====> time elapsed ' + format(duration) + '\n').green);
+		debug(('====> collection [' + desc.name + '] - exported successfully.').green);
+		debug(('====> time elapsed ' + format(duration) + '\n').green);
 
 		callback(null);
 	});
@@ -145,7 +147,8 @@ function close() {
 }
 
 function exporter(collections) {
-	var exports = collections.map(function (c) {
+	debug("Collection to export: ", collections);
+	const exports = collections.map(function (c) {
 		return function (callback) {
 			exportCollection(c, callback);
 		};

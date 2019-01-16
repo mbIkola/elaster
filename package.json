@@ -17,14 +17,15 @@
   "author": "alexander.beletsky@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "async": "~0.8.0",
-    "mongojs": "~0.13.0",
-    "colors": "~0.6.2",
+    "async": "^2.6.1",
+    "colors": "^1.3.3",
+    "elasticsearch": "^15.3.0",
+    "eslint": "^5.12.0",
+    "moment": "^2.23.0",
+    "mongojs": "^2.6.0",
+    "request": "^2.88.0",
+    "single-line-log": "^1.1.2",
     "through": "~2.3.4",
-    "underscore": "~1.6.0",
-    "request": "~2.34.0",
-    "single-line-log": "~0.3.1",
-    "elasticsearch": "~2.1.4",
-    "moment": "~2.6.0"
+    "underscore": "^1.9.1"
   }
 }

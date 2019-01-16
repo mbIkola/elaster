@@ -1,7 +1,7 @@
-var elasticsearch = require('elasticsearch');
+const elasticsearch = require('elasticsearch');
 
 module.exports = function (config) {
-	var client = elasticsearch.Client(config.elastic);
+	const client = elasticsearch.Client(config.elastic);
 
 	return client;
 };

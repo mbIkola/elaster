@@ -1,9 +1,9 @@
-var mongo = require('mongojs');
+const mongo = require('mongojs');
 
 module.exports = function (config) {
-	var collections = config.collections.map(function (c) {
+	const collections = config.collections.map(function (c) {
 		return c.name;
 	});
 
-	return mongo.connect(config.mongo.connection, collections);
+	return new mongo(config.mongo.connection, collections);
 };

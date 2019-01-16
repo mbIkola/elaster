@@ -12,7 +12,7 @@ module.exports = {
 	},
 
 	collections: [ {
-		name: 'collections',
+		name: 'genres',
 		index: 'collections',
 		type: 'collection',
 		fields: ['_id', 'public', 'title', 'description', 'user', 'userData'],
@@ -42,7 +42,7 @@ module.exports = {
 		}
 	},
 	{
-		name: 'items',
+		name: 'movies',
 		index: 'items',
 		query: {user: 'alexander.beletsky@gmail.com'},
 		type: 'item',

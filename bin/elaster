@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-var elaster = require('../source/elaster');
-var config = require('../config');
+const elaster = require('../source/elaster');
+const config = require('../config');
 
 //process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
